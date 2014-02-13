@@ -1,0 +1,15 @@
+Set perspective matrix to each program before rendering
+
+Set view matrix to each program before rendering
+
+Rethink the transparency solution
+
+Add a function for creating a sphere mesh
+
+Add post processing
+
+Add sounds
+
+Add particles
+
+Add performance monitor
