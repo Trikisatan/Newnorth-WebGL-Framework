@@ -715,6 +715,49 @@ NewnorthWGL.Mesh.prototype.Draw = function(program, method) {
 
 	this.VertexBuffer.Deactivate(program.aPosition);
 };
+NewnorthWGL.Mesh.CreatePlane3f = function(options) {
+	var mesh = new NewnorthWGL.Mesh();
+	var position = options.position === undefined ? [0, 0, 0] : options.position;
+	var size = options.size === undefined ? [1, 1] : options.size;
+	var applyTexCoords = Newnorth.Either(options.applyTexCoords, false);
+
+	vertices = [
+		[- 0.5 * size[0], + 0.5 * size[0]],
+		[+ 0.5 * size[1], - 0.5 * size[1]],
+		0,
+	];
+
+	vertices = {
+		topLeft: [vertices[0][0], vertices[1][0], vertices[2]],
+		topRight: [vertices[0][1], vertices[1][0], vertices[2]],
+		bottomLeft: [vertices[0][0], vertices[1][1], vertices[2]],
+		bottomRight: [vertices[0][1], vertices[1][1], vertices[2]],
+	};
+
+	NewnorthWGL.Vec3.Add(vertices.topLeft, vertices.topLeft, position);
+	NewnorthWGL.Vec3.Add(vertices.topRight, vertices.topRight, position);
+	NewnorthWGL.Vec3.Add(vertices.bottomLeft, vertices.bottomLeft, position);
+	NewnorthWGL.Vec3.Add(vertices.bottomRight, vertices.bottomRight, position);
+
+	mesh.CreateVertexBuffer("3f", Engine.GL.STATIC_DRAW);
+	mesh.SetVertexBuffer([
+		vertices.topLeft[0], vertices.topLeft[1], vertices.topLeft[2],
+		vertices.topRight[0], vertices.topRight[1], vertices.topRight[2],
+		vertices.bottomLeft[0], vertices.bottomLeft[1], vertices.bottomLeft[2],
+		vertices.bottomRight[0], vertices.bottomRight[1], vertices.bottomRight[2],
+		vertices.bottomLeft[0], vertices.bottomLeft[1], vertices.bottomLeft[2],
+		vertices.topRight[0], vertices.topRight[1], vertices.topRight[2],
+	]);
+
+	if(applyTexCoords) {
+		mesh.CreateBuffer(
+			"aTexCoord", "2f", Engine.GL.STATIC_DRAW,
+			[0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
+		);
+	}
+
+	return mesh;
+};
 NewnorthWGL.Mesh.CreateCube = function(options) {
 	var mesh = new NewnorthWGL.Mesh();
 	var position = options.position === undefined ? [0, 0, 0] : options.position;
@@ -838,6 +881,9 @@ NewnorthWGL.Scene.prototype.CreateCamera = function(alias, type, data) {
 	this.Cameras.push(camera);
 	return this.Cameras[alias] = camera;
 };
+NewnorthWGL.Scene.prototype.Camera = function(alias) {
+	return this.Cameras[alias];
+},
 NewnorthWGL.Scene.prototype.CreateEntityManager = function(alias, data) {
 	var manager = new NewnorthWGL.EntityManager(data);
 	var inserted = false;
@@ -856,6 +902,9 @@ NewnorthWGL.Scene.prototype.CreateEntityManager = function(alias, data) {
 
 	return this.EntityManagers[alias] = manager;
 };
+NewnorthWGL.Scene.prototype.EntityManager = function(alias) {
+	return this.EntityManagers[alias];
+},
 NewnorthWGL.Scene.prototype.CreateEntity = function(manager, type, options) {
 	return this.EntityManagers[manager].CreateEntity(type, options);
 };
@@ -863,6 +912,12 @@ NewnorthWGL.Scene.prototype.CreateControl = function(alias, type, data) {
 	var control = new type(data);
 	this.Controls.push(control);
 	return this.Controls[alias] = control;
+};
+NewnorthWGL.Scene.prototype.Control = function(alias) {
+	return this.Controls[alias];
+},
+NewnorthWGL.Scene.prototype.PreUpdate = function() {
+	
 };
 NewnorthWGL.Scene.prototype.Update = function() {
 	for(var i = 0; i < this.EntityManagers.length; ++i) {
@@ -878,6 +933,9 @@ NewnorthWGL.Scene.prototype.PostUpdate = function() {
 	for(var i = 0; i < this.EntityManagers.length; ++i) {
 		this.EntityManagers[i].PostUpdate();
 	}
+};
+NewnorthWGL.Scene.prototype.PreRender = function() {
+	
 };
 NewnorthWGL.Scene.prototype.Render = function() {
 	Engine.GL.enable(Engine.GL.SCISSOR_TEST);
@@ -898,6 +956,9 @@ NewnorthWGL.Scene.prototype.Render = function() {
 			this.Controls[i].Render();
 		}
 	}
+};
+NewnorthWGL.Scene.prototype.PostRender = function() {
+	
 };
 NewnorthWGL.Entity = function(data) {
 	this.Layer = Newnorth.Either(this.Layer, 0);
@@ -1637,6 +1698,47 @@ Engine = {
 			Application.OnCanvasResize();
 		}
 	},
+	// 2D
+	Canvas2D: null,
+	Context2D: null,
+	DrawText: function(texture, width, height, x, y, text, options) {
+		if(texture === null) {
+			texture = Engine.GL.createTexture();
+		}
+
+		Engine.Canvas2D.width = width;
+		Engine.Canvas2D.height = height;
+
+		for(var key in options) {
+			if(key === "fillText") {
+				continue;
+			}
+
+			if(key === "strokeText") {
+				continue;
+			}
+
+			Engine.Context2D[key] = options[key];
+		}
+
+		if(options.strokeText === true) {
+			Engine.Context2D.strokeText(text, x, y);
+		}
+
+		if(options.fillText === true) {
+			Engine.Context2D.fillText(text, x, y);
+		}
+
+		Engine.GL.pixelStorei(Engine.GL.UNPACK_FLIP_Y_WEBGL, false);
+		Engine.GL.bindTexture(Engine.GL.TEXTURE_2D, texture);
+		Engine.GL.texImage2D(Engine.GL.TEXTURE_2D, 0, Engine.GL.RGBA, Engine.GL.RGBA, Engine.GL.UNSIGNED_BYTE, Engine.Canvas2D);
+		Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_MAG_FILTER, Engine.GL.LINEAR);
+		Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_MIN_FILTER, Engine.GL.LINEAR);
+		Engine.GL.generateMipmap(Engine.GL.TEXTURE_2D);
+		Engine.GL.bindTexture(Engine.GL.TEXTURE_2D, null);
+
+		return texture;
+	},
 	// WebGL
 	GL: null,
 	// Lifecycle
@@ -1650,6 +1752,9 @@ Engine = {
 			alert("Engine.Canvas is not set!");
 			return;
 		}
+
+		Engine.Canvas2D = document.createElement("canvas");
+		Engine.Context2D = Engine.Canvas2D.getContext("2d");
 
 		Engine.GL = Engine.Canvas.getContext("experimental-webgl");
 
@@ -1684,25 +1789,8 @@ Engine = {
 		}
 
 		if(!Engine.IsPaused) {
-			if(Application.PreUpdate !== undefined) {
-				Application.PreUpdate();
-			}
-
 			Engine.Update();
-
-			if(Application.PostUpdate !== undefined) {
-				Application.PostUpdate();
-			}
-
-			if(Application.PreRender !== undefined) {
-				Application.PreRender();
-			}
-
 			Engine.Render();
-
-			if(Application.PostRender !== undefined) {
-				Application.PostRender();
-			}
 		}
 	},
 	Update: function() {
@@ -1711,19 +1799,63 @@ Engine = {
 
 		for(var i = 0; i < Engine.Scenes.length; ++i) {
 			if(!Engine.Scenes[i].IsPaused) {
+				Engine.Scenes[i].PreUpdate();
+			}
+		}
+
+		if(Application.PreUpdate !== undefined) {
+			Application.PreUpdate();
+		}
+
+		for(var i = 0; i < Engine.Scenes.length; ++i) {
+			if(!Engine.Scenes[i].IsPaused) {
 				Engine.Scenes[i].Update();
 			}
 		}
 
+		if(Application.Update !== undefined) {
+			Application.Update();
+		}
+
 		for(var i = 0; i < Engine.Scenes.length; ++i) {
-			Engine.Scenes[i].PostUpdate();
+			if(!Engine.Scenes[i].IsPaused) {
+				Engine.Scenes[i].PostUpdate();
+			}
+		}
+
+		if(Application.PostUpdate !== undefined) {
+			Application.PostUpdate();
 		}
 	},
 	Render: function() {
 		for(var i = 0; i < Engine.Scenes.length; ++i) {
 			if(Engine.Scenes[i].IsVisible) {
+				Engine.Scenes[i].PreRender();
+			}
+		}
+
+		if(Application.PreRender !== undefined) {
+			Application.PreRender();
+		}
+
+		for(var i = 0; i < Engine.Scenes.length; ++i) {
+			if(Engine.Scenes[i].IsVisible) {
 				Engine.Scenes[i].Render();
 			}
+		}
+
+		if(Application.Render !== undefined) {
+			Application.Render();
+		}
+
+		for(var i = 0; i < Engine.Scenes.length; ++i) {
+			if(Engine.Scenes[i].IsVisible) {
+				Engine.Scenes[i].PostRender();
+			}
+		}
+
+		if(Application.PostRender !== undefined) {
+			Application.PostRender();
 		}
 	},
 	// Events
