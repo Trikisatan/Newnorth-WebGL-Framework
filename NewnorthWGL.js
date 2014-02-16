@@ -1025,9 +1025,17 @@ NewnorthWGL.CameraEntity.prototype = Object.create(NewnorthWGL.Entity.prototype)
 NewnorthWGL.CameraEntity.prototype.SetViewport = function(viewport) {
 	this.Viewport = viewport;
 };
-NewnorthWGL.CameraEntity.prototype.Render = function(mode, framebuffer, viewport) {
+NewnorthWGL.CameraEntity.prototype.Render = function(mode, framebuffer, options) {
 	mode = Newnorth.Either(mode, this.Mode);
-	viewport = Newnorth.Either(viewport, this.Viewport);
+
+	if(options === undefined) {
+		var viewport = this.Viewport;
+		var clearColor = this.ClearColor;
+	}
+	else {
+		var viewport = Newnorth.Either(options.Viewport, this.Viewport);
+		var clearColor = Newnorth.Either(options.ClearColor, this.ClearColor);
+	}
 
 	if(framebuffer !== undefined) {
 		var x = viewport[0];
@@ -1045,7 +1053,7 @@ NewnorthWGL.CameraEntity.prototype.Render = function(mode, framebuffer, viewport
 
 	Engine.GL.viewport(x, y, w, h);
 	Engine.GL.scissor(x, y, w, h);
-	Engine.GL.clearColor(this.ClearColor[0], this.ClearColor[1], this.ClearColor[2], this.ClearColor[3]);
+	Engine.GL.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
 	Engine.GL.clear(Engine.GL.COLOR_BUFFER_BIT | Engine.GL.DEPTH_BUFFER_BIT);
 
 	// Render non-transparent entities.
@@ -1354,17 +1362,17 @@ NewnorthWGL.TransformComponent.prototype.SetPosition = function(position) {
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetPositionX = function(position) {
-	this.AdjustAbsolutePosition([position[0] - this.Position[0], 0, 0]);
+	this.AdjustAbsolutePosition([position - this.Position[0], 0, 0]);
 	this.Position[0] = position;
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetPositionY = function(position) {
-	this.AdjustAbsolutePosition([0, position[1] - this.Position[1], 0]);
+	this.AdjustAbsolutePosition([0, position - this.Position[1], 0]);
 	this.Position[1] = position;
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetPositionZ = function(position) {
-	this.AdjustAbsolutePosition([0, 0, position[2] - this.Position[2]]);
+	this.AdjustAbsolutePosition([0, 0, position - this.Position[2]]);
 	this.Position[2] = position;
 	this.UpdateMatrix = true;
 };
@@ -1449,17 +1457,17 @@ NewnorthWGL.TransformComponent.prototype.SetRotation = function(rotation) {
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetRotationX = function(rotation) {
-	this.AdjustAbsoluteRotation([rotation[0] - this.Rotation[0], 0, 0]);
+	this.AdjustAbsoluteRotation([rotation - this.Rotation[0], 0, 0]);
 	this.Rotation[0] = rotation;
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetRotationY = function(rotation) {
-	this.AdjustAbsoluteRotation([0, rotation[1] - this.Rotation[1], 0]);
+	this.AdjustAbsoluteRotation([0, rotation - this.Rotation[1], 0]);
 	this.Rotation[1] = rotation;
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetRotationZ = function(rotation) {
-	this.AdjustAbsoluteRotation([0, 0, rotation[2] - this.Rotation[2]]);
+	this.AdjustAbsoluteRotation([0, 0, rotation - this.Rotation[2]]);
 	this.Rotation[2] = rotation;
 	this.UpdateMatrix = true;
 };
@@ -1544,17 +1552,17 @@ NewnorthWGL.TransformComponent.prototype.SetScale = function(scale) {
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetScaleX = function(scale) {
-	this.AdjustAbsoluteScale([scale[0] - this.Scale[0], 0, 0]);
+	this.AdjustAbsoluteScale([scale - this.Scale[0], 0, 0]);
 	this.Scale[0] = scale;
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetScaleY = function(scale) {
-	this.AdjustAbsoluteScale([0, scale[1] - this.Scale[1], 0]);
+	this.AdjustAbsoluteScale([0, scale - this.Scale[1], 0]);
 	this.Scale[1] = scale;
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetScaleZ = function(scale) {
-	this.AdjustAbsoluteScale([0, 0, scale[2] - this.Scale[2]]);
+	this.AdjustAbsoluteScale([0, 0, scale - this.Scale[2]]);
 	this.Scale[2] = scale;
 	this.UpdateMatrix = true;
 };
@@ -1894,6 +1902,21 @@ Engine = {
 	IsLeftMouseButtonReleased: function() {
 		return Engine.Mouse.State[2].Buttons[0] === true && Engine.Mouse.State[1].Buttons[0] !== true;
 	},
+	IsRightMouseButtonPressed: function() {
+		return Engine.Mouse.State[2].Buttons[2] !== true && Engine.Mouse.State[1].Buttons[2] === true;
+	},
+	IsRightMouseButtonDown: function() {
+		return Engine.Mouse.State[1].Buttons[2] === true;
+	},
+	IsRightMouseButtonUp: function() {
+		return Engine.Mouse.State[1].Buttons[2] !== true;
+	},
+	IsRightMouseButtonReleased: function() {
+		return Engine.Mouse.State[2].Buttons[2] === true && Engine.Mouse.State[2].Buttons[2] !== true;
+	},
+	GetMouseWheel: function() {
+		return Engine.Mouse.State[1].Wheel;
+	},
 	// Programs
 	Programs: {},
 	CreateProgram: function(alias, vs, fs, variables) {
@@ -2074,14 +2097,16 @@ Engine.Keyboard = {
 };
 Engine.Mouse = {
 	State: [
-		{Position: [0, 0], Buttons: []},
-		{Position: [0, 0], Buttons: []},
-		{Position: [0, 0], Buttons: []},
+		{Position: [0, 0], Buttons: [], Wheel: 0},
+		{Position: [0, 0], Buttons: [], Wheel: 0},
+		{Position: [0, 0], Buttons: [], Wheel: 0},
 	],
 	Initialize: function() {
 		document.body.addEventListener("mousemove", function(e){Engine.Mouse.OnMouseMove(e)});
 		document.body.addEventListener("mousedown", function(e){Engine.Mouse.OnMouseDown(e)});
 		document.body.addEventListener("mouseup", function(e){Engine.Mouse.OnMouseUp(e)});
+		document.body.addEventListener("mousewheel", function(e){if(e.wheelDelta < 0){Engine.Mouse.OnMouseWheelUp(e)}else{Engine.Mouse.OnMouseWheelDown(e)}});
+		document.body.addEventListener("DOMMouseScroll", function(e){if(e.detail < 0){Engine.Mouse.OnMouseWheelUp(e)}else{Engine.Mouse.OnMouseWheelDown(e)}});
 	},
 	OnMouseMove: function(event) {
 		this.State[0].Position[0] = window.pageXOffset + event.clientX - Engine.GetCanvasPositionX();
@@ -2093,10 +2118,19 @@ Engine.Mouse = {
 	OnMouseUp: function(event) {
 		this.State[0].Buttons[event.button] = false;
 	},
+	OnMouseWheelUp: function() {
+		this.State[0].Wheel = 1;
+	},
+	OnMouseWheelDown: function() {
+		this.State[0].Wheel = -1;
+	},
 	Update: function() {
 		this.State[2].Position = this.State[1].Position.slice();
 		this.State[2].Buttons = this.State[1].Buttons.slice();
+		this.State[2].Wheel = this.State[1].Wheel;
 		this.State[1].Position = this.State[0].Position.slice();
 		this.State[1].Buttons = this.State[0].Buttons.slice();
+		this.State[1].Wheel = this.State[0].Wheel;
+		this.State[0].Wheel = 0;
 	},
 };
