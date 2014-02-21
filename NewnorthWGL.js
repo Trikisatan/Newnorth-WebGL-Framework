@@ -23,6 +23,193 @@ NewnorthWGL.Float = {
 		return radians;
 	},
 };
+NewnorthWGL.Mat4 = {
+	Clone: function(m) {
+		return [
+			m[0], m[1], m[2], m[3],
+			m[4], m[5], m[6], m[7],
+			m[8], m[9], m[10], m[11],
+			m[12], m[13], m[14], m[15]
+		];
+	},
+	FromPosition: function(out, v) {
+		if(out === null) {
+			return [
+				1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				v[0], v[1], v[2], 1
+			];
+		}
+
+		out[0] = 1;
+		out[1] = 0;
+		out[2] = 0;
+		out[3] = 0;
+
+		out[4] = 0;
+		out[5] = 1;
+		out[6] = 0;
+		out[7] = 0;
+
+		out[8] = 0;
+		out[9] = 0;
+		out[10] = 1;
+		out[11] = 0;
+
+		out[12] = v[0];
+		out[13] = v[1];
+		out[14] = v[2];
+		out[15] = 1;
+
+		return out;
+	},
+	FromRotation: function(out, v) {
+		var sx = Math.sin(v[0]);
+		var cx = Math.cos(v[0]);
+		var sy = Math.sin(v[1]);
+		var cy = Math.cos(v[1]);
+		var sz = Math.sin(v[2]);
+		var cz = Math.cos(v[2]);
+
+		if(out === null) {
+			return [
+				cy*cz, sx*sy*cz+cx*sz, cx*-sy*cz+sx*sz, 0,
+				-cy*sz, cx*cz-sx*sy*sz, sx*cz-cx*-sy*sz, 0,
+				sy, -sx*cy, cx*cy, 0,
+				0, 0, 0, 1
+			];
+		}
+
+		out[0] = cy*cz;
+		out[1] = sx*sy*cz+cx*sz;
+		out[2] = cx*-sy*cz+sx*sz;
+		out[3] = 0;
+
+		out[4] = -cy*sz;
+		out[5] = cx*cz-sx*sy*sz;
+		out[6] = sx*cz-cx*-sy*sz;
+		out[7] = 0;
+
+		out[8] = sy;
+		out[9] = -sx*cy;
+		out[10] = cx*cy;
+		out[11] = 0;
+
+		out[12] = 0;
+		out[13] = 0;
+		out[14] = 0;
+		out[15] = 1;
+
+		return out;
+	},
+	FromRotationReversed: function(out, v) {
+		var sx = Math.sin(v[0]);
+		var cx = Math.cos(v[0]);
+		var sy = Math.sin(v[1]);
+		var cy = Math.cos(v[1]);
+		var sz = Math.sin(v[2]);
+		var cz = Math.cos(v[2]);
+
+		if(out === null) {
+			return [
+				cz*cy, sz*cy, -sy, 0,
+				-sz*cx+cz*sy*sx, cz*cx+sz*sy*sx, cy*sx, 0,
+				cz*sy*cx+sz*sx, sz*sy*cx-cz*sx, cy*cx, 0,
+				0, 0, 0, 1
+			];
+		}
+
+		out[0] = cz*cy;
+		out[1] = sz*cy;
+		out[2] = -sy;
+		out[3] = 0;
+
+		out[4] = -sz*cx+cz*sy*sx;
+		out[5] = cz*cx+sz*sy*sx;
+		out[6] = cy*sx;
+		out[7] = 0;
+
+		out[8] = cz*sy*cx+sz*sx;
+		out[9] = sz*sy*cx-cz*sx;
+		out[10] = cy*cx;
+		out[11] = 0;
+
+		out[12] = 0;
+		out[13] = 0;
+		out[14] = 0;
+		out[15] = 1;
+
+		return out;
+	},
+	Mul: function(out, m1, m2) {
+		if(out === null) {
+			return [
+				m2[0] * m1[0] + m2[1] * m1[4] + m2[2] * m1[8] + m2[3] * m1[12], m2[0] * m1[1] + m2[1] * m1[5] + m2[2] * m1[9] + m2[3] * m1[13], m2[0] * m1[2] + m2[1] * m1[6] + m2[2] * m1[10] + m2[3] * m1[14], m2[0] * m1[3] + m2[1] * m1[7] + m2[2] * m1[11] + m2[3] * m1[15],
+				m2[4] * m1[0] + m2[5] * m1[4] + m2[6] * m1[8] + m2[7] * m1[12], m2[4] * m1[1] + m2[5] * m1[5] + m2[6] * m1[9] + m2[7] * m1[13], m2[4] * m1[2] + m2[5] * m1[6] + m2[6] * m1[10] + m2[7] * m1[14], m2[4] * m1[3] + m2[5] * m1[7] + m2[6] * m1[11] + m2[7] * m1[15],
+				m2[8] * m1[0] + m2[9] * m1[4] + m2[10] * m1[8] + m2[11] * m1[12], m2[8] * m1[1] + m2[9] * m1[5] + m2[10] * m1[9] + m2[11] * m1[13], m2[8] * m1[2] + m2[9] * m1[6] + m2[10] * m1[10] + m2[11] * m1[14], m2[8] * m1[3] + m2[9] * m1[7] + m2[10] * m1[11] + m2[11] * m1[15],
+				m2[12] * m1[0] + m2[13] * m1[4] + m2[14] * m1[8] + m2[15] * m1[12], m2[12] * m1[1] + m2[13] * m1[5] + m2[14] * m1[9] + m2[15] * m1[13], m2[12] * m1[2] + m2[13] * m1[6] + m2[14] * m1[10] + m2[15] * m1[14], m2[12] * m1[3] + m2[13] * m1[7] + m2[14] * m1[11] + m2[15] * m1[15]
+			];
+		}
+
+		var m1c = NewnorthWGL.Mat4.Clone(m1);
+		var m2c = NewnorthWGL.Mat4.Clone(m2);
+
+		out[0] = m2c[0] * m1c[0] + m2c[1] * m1c[4] + m2c[2] * m1c[8] + m2c[3] * m1c[12];
+		out[1] = m2c[0] * m1c[1] + m2c[1] * m1c[5] + m2c[2] * m1c[9] + m2c[3] * m1c[13];
+		out[2] = m2c[0] * m1c[2] + m2c[1] * m1c[6] + m2c[2] * m1c[10] + m2c[3] * m1c[14];
+		out[3] = m2c[0] * m1c[3] + m2c[1] * m1c[7] + m2c[2] * m1c[11] + m2c[3] * m1c[15];
+
+		out[4] = m2c[4] * m1c[0] + m2c[5] * m1c[4] + m2c[6] * m1c[8] + m2c[7] * m1c[12];
+		out[5] = m2c[4] * m1c[1] + m2c[5] * m1c[5] + m2c[6] * m1c[9] + m2c[7] * m1c[13];
+		out[6] = m2c[4] * m1c[2] + m2c[5] * m1c[6] + m2c[6] * m1c[10] + m2c[7] * m1c[14];
+		out[7] = m2c[4] * m1c[3] + m2c[5] * m1c[7] + m2c[6] * m1c[11] + m2c[7] * m1c[15];
+
+		out[8] = m2c[8] * m1c[0] + m2c[9] * m1c[4] + m2c[10] * m1c[8] + m2c[11] * m1c[12];
+		out[9] = m2c[8] * m1c[1] + m2c[9] * m1c[5] + m2c[10] * m1c[9] + m2c[11] * m1c[13];
+		out[10] = m2c[8] * m1c[2] + m2c[9] * m1c[6] + m2c[10] * m1c[10] + m2c[11] * m1c[14];
+		out[11] = m2c[8] * m1c[3] + m2c[9] * m1c[7] + m2c[10] * m1c[11] + m2c[11] * m1c[15];
+
+		out[12] = m2c[12] * m1c[0] + m2c[13] * m1c[4] + m2c[14] * m1c[8] + m2c[15] * m1c[12];
+		out[13] = m2c[12] * m1c[1] + m2c[13] * m1c[5] + m2c[14] * m1c[9] + m2c[15] * m1c[13];
+		out[14] = m2c[12] * m1c[2] + m2c[13] * m1c[6] + m2c[14] * m1c[10] + m2c[15] * m1c[14];
+		out[15] = m2c[12] * m1c[3] + m2c[13] * m1c[7] + m2c[14] * m1c[11] + m2c[15] * m1c[15];
+
+		return out;
+	},
+	Scale: function(out, m, v) {
+		if(out === null) {
+			return [
+				m[0] * v[0], m[1] * v[0], m[2] * v[0], m[3] * v[0],
+				m[4] * v[1], m[5] * v[1], m[6] * v[1], m[7] * v[1],
+				m[8] * v[2], m[9] * v[2], m[10] * v[2], m[11] * v[2],
+				m[12], m[13], m[14], m[15]
+			];
+		}
+
+		out[0] = m[0] * v[0];
+		out[1] = m[1] * v[0];
+		out[2] = m[2] * v[0];
+		out[3] = m[3] * v[0];
+
+		out[4] = m[4] * v[1];
+		out[5] = m[5] * v[1];
+		out[6] = m[6] * v[1];
+		out[7] = m[7] * v[1];
+
+		out[8] = m[8] * v[2];
+		out[9] = m[9] * v[2];
+		out[10] = m[10] * v[2];
+		out[11] = m[11] * v[2];
+
+		out[12] = m[12];
+		out[13] = m[13];
+		out[14] = m[14];
+		out[15] = m[15];
+
+		return out;
+	},
+};
 NewnorthWGL.Vec2 = {
 	Add: function(out, v1, v2) {
 		if(out === null) {
