@@ -1867,8 +1867,8 @@ NewnorthWGL.CameraTransformComponent.prototype.CreateMatrix = function() {
 			this.Matrix,
 			NewnorthWGL.Mat4.Mul(
 				null,
-				NewnorthWGL.Mat4.FromPosition(null, this.Position),
-				NewnorthWGL.Mat4.FromRotation(null, this.Rotation)
+				NewnorthWGL.Mat4.FromRotation(null, this.Rotation),
+				NewnorthWGL.Mat4.FromPosition(null, this.Position)
 			),
 			NewnorthWGL.Mat4.Mul(
 				null,
