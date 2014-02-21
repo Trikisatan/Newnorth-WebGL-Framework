@@ -1537,12 +1537,24 @@ NewnorthWGL.TransformComponent.prototype.SetData = function(key, value) {
 };
 NewnorthWGL.TransformComponent.prototype.CreateMatrix = function() {
 	if(this.UpdateMatrix) {
-		mat4.identity(this.Matrix);
-		mat4.translate(this.Matrix, this.Matrix, this.Position);
-		mat4.rotate(this.Matrix, this.Matrix, this.Rotation[0], [-1, 0, 0]);
-		mat4.rotate(this.Matrix, this.Matrix, this.Rotation[1], [0, -1, 0]);
-		mat4.rotate(this.Matrix, this.Matrix, this.Rotation[2], [0, 0, -1]);
-		mat4.scale(this.Matrix, this.Matrix, this.Scale);
+		this.Matrix = NewnorthWGL.Mat4.Mul(
+			null,
+			NewnorthWGL.Mat4.Mul(
+				null,
+				NewnorthWGL.Mat4.FromPosition(null, NewnorthWGL.Vec3.Sub(null, this.AbsolutePosition, this.Position)),
+				NewnorthWGL.Mat4.FromRotation(null, NewnorthWGL.Vec3.Sub(null, this.AbsoluteRotation, this.Rotation))
+			),
+			NewnorthWGL.Mat4.Mul(
+				null,
+				NewnorthWGL.Mat4.Scale(
+					null,
+					NewnorthWGL.Mat4.FromPosition(null, this.Position),
+					this.AbsoluteScale
+				),
+				NewnorthWGL.Mat4.FromRotation(null, this.Rotation)
+			)
+		);
+
 		this.UpdateMatrix = false;
 	}
 };
@@ -1851,27 +1863,20 @@ NewnorthWGL.CameraTransformComponent = function(data) {
 NewnorthWGL.CameraTransformComponent.prototype = Object.create(NewnorthWGL.TransformComponent.prototype);
 NewnorthWGL.CameraTransformComponent.prototype.CreateMatrix = function() {
 	if(this.UpdateMatrix) {
-		mat4.identity(this.Matrix);
+		NewnorthWGL.Mat4.Mul(
+			this.Matrix,
+			NewnorthWGL.Mat4.Mul(
+				null,
+				NewnorthWGL.Mat4.FromPosition(null, this.Position),
+				NewnorthWGL.Mat4.FromRotation(null, this.Rotation)
+			),
+			NewnorthWGL.Mat4.Mul(
+				null,
+				NewnorthWGL.Mat4.FromRotationReversed(null, NewnorthWGL.Vec3.Sub(null, this.Rotation, this.AbsoluteRotation)),
+				NewnorthWGL.Mat4.FromPosition(null, NewnorthWGL.Vec3.Sub(null, this.Position, this.AbsolutePosition))
+			)
+		);
 
-		if(this.Entity.Parent !== null) {
-			if(this.InheritPosition) {
-				var position = this.Entity.Parent.Transform.AbsolutePosition;
-				mat4.translate(this.Matrix, this.Matrix, position);
-			}
-
-			if(this.InheritRotation) {
-				var rotation = this.Entity.Parent.Transform.AbsoluteRotation;
-				mat4.rotate(this.Matrix, this.Matrix, rotation[2], [0, 0, -1]);
-				mat4.rotate(this.Matrix, this.Matrix, rotation[1], [0, -1, 0]);
-				mat4.rotate(this.Matrix, this.Matrix, rotation[0], [-1, 0, 0]);
-			}
-		}
-
-		mat4.rotate(this.Matrix, this.Matrix, this.Rotation[2], [ 0,  0, -1]);
-		mat4.rotate(this.Matrix, this.Matrix, this.Rotation[1], [ 0, -1,  0]);
-		mat4.rotate(this.Matrix, this.Matrix, this.Rotation[0], [-1,  0,  0]);
-		mat4.invert(this.Matrix, this.Matrix);
-		mat4.translate(this.Matrix, this.Matrix, this.Position);
 		this.UpdateMatrix = false;
 	}
 };
