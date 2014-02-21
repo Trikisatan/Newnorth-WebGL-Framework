@@ -2114,8 +2114,14 @@ Engine = {
 	GetMousePositionX: function() {
 		return Engine.Mouse.State[1].Position[0];
 	},
+	GetMouseRelPositionX: function() {
+		return Engine.Mouse.State[1].Position[0] - Engine.Mouse.State[2].Position[0];
+	},
 	GetMousePositionY: function() {
 		return Engine.Mouse.State[1].Position[1];
+	},
+	GetMouseRelPositionY: function() {
+		return Engine.Mouse.State[1].Position[1] - Engine.Mouse.State[2].Position[1];
 	},
 	IsLeftMouseButtonPressed: function() {
 		return Engine.Mouse.State[2].Buttons[0] !== true && Engine.Mouse.State[1].Buttons[0] === true;
@@ -2128,6 +2134,18 @@ Engine = {
 	},
 	IsLeftMouseButtonReleased: function() {
 		return Engine.Mouse.State[2].Buttons[0] === true && Engine.Mouse.State[1].Buttons[0] !== true;
+	},
+	IsMiddleMouseButtonPressed: function() {
+		return Engine.Mouse.State[2].Buttons[1] !== true && Engine.Mouse.State[1].Buttons[1] === true;
+	},
+	IsMiddleMouseButtonDown: function() {
+		return Engine.Mouse.State[1].Buttons[1] === true;
+	},
+	IsMiddleMouseButtonUp: function() {
+		return Engine.Mouse.State[1].Buttons[1] !== true;
+	},
+	IsMiddleMouseButtonReleased: function() {
+		return Engine.Mouse.State[2].Buttons[1] === true && Engine.Mouse.State[2].Buttons[1] !== true;
 	},
 	IsRightMouseButtonPressed: function() {
 		return Engine.Mouse.State[2].Buttons[2] !== true && Engine.Mouse.State[1].Buttons[2] === true;
