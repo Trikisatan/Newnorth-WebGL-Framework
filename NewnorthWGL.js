@@ -1538,29 +1538,25 @@ NewnorthWGL.TransformComponent.prototype.GetPositionZ = function() {
 	return this.InheritPosition ? this.AbsolutePosition[2] : this.Position[2];
 };
 NewnorthWGL.TransformComponent.prototype.SetPosition = function(position) {
-	this.AdjustAbsolutePosition([
-		position[0] - this.Position[0],
-		position[1] - this.Position[1],
-		position[2] - this.Position[2]
-	]);
 	this.Position[0] = position[0];
 	this.Position[1] = position[1];
 	this.Position[2] = position[2];
+	this.UpdateAbsolutePosition();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetPositionX = function(position) {
-	this.AdjustAbsolutePosition([position - this.Position[0], 0, 0]);
 	this.Position[0] = position;
+	this.UpdateAbsolutePosition();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetPositionY = function(position) {
-	this.AdjustAbsolutePosition([0, position - this.Position[1], 0]);
 	this.Position[1] = position;
+	this.UpdateAbsolutePosition();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetPositionZ = function(position) {
-	this.AdjustAbsolutePosition([0, 0, position - this.Position[2]]);
 	this.Position[2] = position;
+	this.UpdateAbsolutePosition();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToPosition = function(position, velocity, time) {
@@ -1584,35 +1580,42 @@ NewnorthWGL.TransformComponent.prototype.TransitionToPositionZ = function(positi
 	this.SetPositionZ(position);
 };
 NewnorthWGL.TransformComponent.prototype.AdjustPosition = function(distance) {
-	this.AdjustAbsolutePosition(distance);
 	this.Position[0] += distance[0];
 	this.Position[1] += distance[1];
 	this.Position[2] += distance[2];
+	this.UpdateAbsolutePosition();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.AdjustPositionX = function(distance) {
-	this.AdjustAbsolutePosition([distance, 0, 0]);
 	this.Position[0] += distance;
+	this.UpdateAbsolutePosition();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.AdjustPositionY = function(distance) {
-	this.AdjustAbsolutePosition([0, distance, 0]);
 	this.Position[1] += distance;
+	this.UpdateAbsolutePosition();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.AdjustPositionZ = function(distance) {
-	this.AdjustAbsolutePosition([0, 0, distance]);
 	this.Position[2] += distance;
+	this.UpdateAbsolutePosition();
 	this.UpdateMatrix = true;
 };
-NewnorthWGL.TransformComponent.prototype.AdjustAbsolutePosition = function(change) {
-	this.AbsolutePosition[0] += change[0];
-	this.AbsolutePosition[1] += change[1];
-	this.AbsolutePosition[2] += change[2];
+NewnorthWGL.TransformComponent.prototype.UpdateAbsolutePosition = function() {
+	if(this.Entity.Parent === null) {
+		this.AbsolutePosition[0] = this.Position[0];
+		this.AbsolutePosition[1] = this.Position[1];
+		this.AbsolutePosition[2] = this.Position[2];
+	}
+	else {
+		this.AbsolutePosition[0] = this.Entity.Parent.Transform.AbsolutePosition[0] + this.Position[0];
+		this.AbsolutePosition[1] = this.Entity.Parent.Transform.AbsolutePosition[1] + this.Position[1];
+		this.AbsolutePosition[2] = this.Entity.Parent.Transform.AbsolutePosition[2] + this.Position[2];
+	}
 
 	for(var i = 0; i < this.Entity.Children.length; ++i) {
 		if(this.Entity.Children[i].Transform !== undefined) {
-			this.Entity.Children[i].Transform.AdjustAbsolutePosition(change);
+			this.Entity.Children[i].Transform.UpdateAbsolutePosition();
 		}
 	}
 
@@ -1633,29 +1636,25 @@ NewnorthWGL.TransformComponent.prototype.GetRotationZ = function() {
 	return this.InheritRotation ? this.AbsoluteRotation[2] : this.Rotation[2];
 };
 NewnorthWGL.TransformComponent.prototype.SetRotation = function(rotation) {
-	this.AdjustAbsoluteRotation([
-		rotation[0] - this.Rotation[0],
-		rotation[1] - this.Rotation[1],
-		rotation[2] - this.Rotation[2]
-	]);
 	this.Rotation[0] = rotation[0];
 	this.Rotation[1] = rotation[1];
 	this.Rotation[2] = rotation[2];
+	this.UpdateAbsoluteRotation();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetRotationX = function(rotation) {
-	this.AdjustAbsoluteRotation([rotation - this.Rotation[0], 0, 0]);
 	this.Rotation[0] = rotation;
+	this.UpdateAbsoluteRotation();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetRotationY = function(rotation) {
-	this.AdjustAbsoluteRotation([0, rotation - this.Rotation[1], 0]);
 	this.Rotation[1] = rotation;
+	this.UpdateAbsoluteRotation();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetRotationZ = function(rotation) {
-	this.AdjustAbsoluteRotation([0, 0, rotation - this.Rotation[2]]);
 	this.Rotation[2] = rotation;
+	this.UpdateAbsoluteRotation();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToRotation = function(rotation, velocity, time) {
@@ -1679,35 +1678,42 @@ NewnorthWGL.TransformComponent.prototype.TransitionToRotationZ = function(rotati
 	this.SetRotationZ(rotation);
 };
 NewnorthWGL.TransformComponent.prototype.AdjustRotation = function(rotation) {
-	this.AdjustAbsoluteRotation(rotation);
 	this.Rotation[0] += rotation[0];
 	this.Rotation[1] += rotation[1];
 	this.Rotation[2] += rotation[2];
+	this.UpdateAbsoluteRotation();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.AdjustRotationX = function(rotation) {
-	this.AdjustAbsoluteRotation([rotation, 0, 0]);
 	this.Rotation[0] += rotation;
+	this.UpdateAbsoluteRotation();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.AdjustRotationY = function(rotation) {
-	this.AdjustAbsoluteRotation([0, rotation, 0]);
 	this.Rotation[1] += rotation;
+	this.UpdateAbsoluteRotation();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.AdjustRotationZ = function(rotation) {
-	this.AdjustAbsoluteRotation([0, 0, rotation]);
 	this.Rotation[2] += rotation;
+	this.UpdateAbsoluteRotation();
 	this.UpdateMatrix = true;
 };
-NewnorthWGL.TransformComponent.prototype.AdjustAbsoluteRotation = function(change) {
-	this.AbsoluteRotation[0] += change[0];
-	this.AbsoluteRotation[1] += change[1];
-	this.AbsoluteRotation[2] += change[2];
+NewnorthWGL.TransformComponent.prototype.UpdateAbsoluteRotation = function() {
+	if(this.Entity.Parent === null) {
+		this.AbsoluteRotation[0] = this.Rotation[0];
+		this.AbsoluteRotation[1] = this.Rotation[1];
+		this.AbsoluteRotation[2] = this.Rotation[2];
+	}
+	else {
+		this.AbsoluteRotation[0] = this.Entity.Parent.Transform.AbsoluteRotation[0] + this.Rotation[0];
+		this.AbsoluteRotation[1] = this.Entity.Parent.Transform.AbsoluteRotation[1] + this.Rotation[1];
+		this.AbsoluteRotation[2] = this.Entity.Parent.Transform.AbsoluteRotation[2] + this.Rotation[2];
+	}
 
 	for(var i = 0; i < this.Entity.Children.length; ++i) {
 		if(this.Entity.Children[i].Transform !== undefined) {
-			this.Entity.Children[i].Transform.AdjustAbsoluteRotation(change);
+			this.Entity.Children[i].Transform.UpdateAbsoluteRotation();
 		}
 	}
 
@@ -1728,29 +1734,25 @@ NewnorthWGL.TransformComponent.prototype.GetScaleZ = function() {
 	return this.InheritScale ? this.AbsoluteScale[2] : this.Scale[2];
 };
 NewnorthWGL.TransformComponent.prototype.SetScale = function(scale) {
-	this.AdjustAbsoluteScale([
-		scale[0] - this.Scale[0],
-		scale[1] - this.Scale[1],
-		scale[2] - this.Scale[2]
-	]);
 	this.Scale[0] = scale[0];
 	this.Scale[1] = scale[1];
 	this.Scale[2] = scale[2];
+	this.UpdateAbsoluteScale();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetScaleX = function(scale) {
-	this.AdjustAbsoluteScale([scale - this.Scale[0], 0, 0]);
 	this.Scale[0] = scale;
+	this.UpdateAbsoluteScale();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetScaleY = function(scale) {
-	this.AdjustAbsoluteScale([0, scale - this.Scale[1], 0]);
 	this.Scale[1] = scale;
+	this.UpdateAbsoluteScale();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.SetScaleZ = function(scale) {
-	this.AdjustAbsoluteScale([0, 0, scale - this.Scale[2]]);
 	this.Scale[2] = scale;
+	this.UpdateAbsoluteScale();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToScale = function(scale, velocity, time) {
@@ -1774,35 +1776,42 @@ NewnorthWGL.TransformComponent.prototype.TransitionToScaleZ = function(scale, ve
 	this.SetScaleZ(scale);
 };
 NewnorthWGL.TransformComponent.prototype.AdjustScale = function(scale) {
-	this.AdjustAbsoluteScale(scale);
 	this.Scale[0] += scale[0];
 	this.Scale[1] += scale[1];
 	this.Scale[2] += scale[2];
+	this.UpdateAbsoluteScale();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.AdjustScaleX = function(scale) {
-	this.AdjustAbsoluteScale([scale, 0, 0]);
 	this.Scale[0] += scale;
+	this.UpdateAbsoluteScale();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.AdjustScaleY = function(scale) {
-	this.AdjustAbsoluteScale([0, scale, 0]);
 	this.Scale[1] += scale;
+	this.UpdateAbsoluteScale();
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.AdjustScaleZ = function(scale) {
-	this.AdjustAbsoluteScale([0, 0, scale]);
 	this.Scale[2] += scale;
+	this.UpdateAbsoluteScale();
 	this.UpdateMatrix = true;
 };
-NewnorthWGL.TransformComponent.prototype.AdjustAbsoluteScale = function(change) {
-	this.AbsoluteScale[0] += change[0];
-	this.AbsoluteScale[1] += change[1];
-	this.AbsoluteScale[2] += change[2];
+NewnorthWGL.TransformComponent.prototype.UpdateAbsoluteScale = function() {
+	if(this.Entity.Parent === null) {
+		this.AbsoluteScale[0] = this.Scale[0];
+		this.AbsoluteScale[1] = this.Scale[1];
+		this.AbsoluteScale[2] = this.Scale[2];
+	}
+	else {
+		this.AbsoluteScale[0] = this.Entity.Parent.Transform.AbsoluteScale[0] * this.Scale[0];
+		this.AbsoluteScale[1] = this.Entity.Parent.Transform.AbsoluteScale[1] * this.Scale[1];
+		this.AbsoluteScale[2] = this.Entity.Parent.Transform.AbsoluteScale[2] * this.Scale[2];
+	}
 
 	for(var i = 0; i < this.Entity.Children.length; ++i) {
 		if(this.Entity.Children[i].Transform !== undefined) {
-			this.Entity.Children[i].Transform.AdjustAbsoluteScale(change);
+			this.Entity.Children[i].Transform.UpdateAbsoluteScale();
 		}
 	}
 
