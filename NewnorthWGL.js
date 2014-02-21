@@ -1150,6 +1150,7 @@ NewnorthWGL.Scene.prototype.PostRender = function() {
 NewnorthWGL.Entity = function(data) {
 	this.Layer = Newnorth.Either(this.Layer, 0);
 	this.Manager = null;
+	this.Components = Newnorth.Either(this.Components, []);
 	this.Parent = null;
 	this.Children = [];
 	this.IsTransparent = false;
@@ -1176,12 +1177,25 @@ NewnorthWGL.Entity.prototype.SetData = function(key, value) {
 			this[key] = value;
 	}
 };
-NewnorthWGL.Entity.prototype.AddChild = function(child) {
-	child.Parent = this;
-	this.Children.push(child);
-};
 NewnorthWGL.Entity.prototype.SetManager = function(manager) {
 	this.Manager = manager;
+};
+NewnorthWGL.Entity.prototype.AddComponent = function(type, data) {
+	var component = new type(this, data);
+	this.Components = Newnorth.Either(this.Components, []);
+	this.Components.push(component);
+	this[component.Type] = component;
+};
+NewnorthWGL.Entity.prototype.SetParent = function(parent) {
+	this.Parent = parent;
+
+	for(var i = 0; i < this.Components.length; ++i) {
+		this.Components[i].OnNewParent();
+	}
+};
+NewnorthWGL.Entity.prototype.AddChild = function(child) {
+	child.SetParent(this);
+	this.Children.push(child);
 };
 NewnorthWGL.Entity.prototype.Update = function() {
 	
@@ -1194,7 +1208,7 @@ NewnorthWGL.Entity.prototype.Destroy = function() {
 };
 NewnorthWGL.CameraEntity = function(scene, data) {
 	this.Scene = scene;
-	this.Transform = new NewnorthWGL.CameraTransformComponent({Entity: this});
+	this.AddComponent(NewnorthWGL.CameraTransformComponent, {});
 	this.Matrix = mat4.create();
 	this.UpdateMatrix = true;
 	this.ClearColor = [0, 0, 0, 1];
@@ -1417,13 +1431,15 @@ NewnorthWGL.PlaceHolderControl.prototype.Render = function() {
 		}
 	}
 };
-NewnorthWGL.Component = function(data) {
+NewnorthWGL.Component = function(entity, data) {
+	this.Entity = entity;
+
 	for(var key in data) {
 		this.SetData(key, data[key]);
 	}
 
-	if(this.Entity === undefined) {
-		throw "Entity not set!";
+	if(this.Type === undefined) {
+		throw "Type not set!";
 	}
 };
 NewnorthWGL.Component.prototype.SetData = function(key, value) {
@@ -1432,7 +1448,11 @@ NewnorthWGL.Component.prototype.SetData = function(key, value) {
 NewnorthWGL.Component.prototype.Update = function() {
 	
 };
+NewnorthWGL.Component.prototype.OnNewParent = function() {
+	
+};
 NewnorthWGL.PhysicsComponent = function(data) {
+	this.Type = "Physics";
 	this.Velocity = [0, 0, 0];
 
 	NewnorthWGL.Component.call(this, data);
@@ -1476,6 +1496,7 @@ NewnorthWGL.PhysicsComponent.prototype.Update = function(time) {
 	]);
 };
 NewnorthWGL.TransformComponent = function(data) {
+	this.Type = "Transform";
 	this.Matrix = mat4.create();
 	this.UpdateMatrix = true;
 	this.Position = [0, 0, 0];
@@ -1818,6 +1839,11 @@ NewnorthWGL.TransformComponent.prototype.UpdateAbsoluteScale = function() {
 	if(this.InheritScale) {
 		this.UpdateMatrix = true;
 	}
+};
+NewnorthWGL.TransformComponent.prototype.OnNewParent = function() {
+	this.UpdateAbsolutePosition();
+	this.UpdateAbsoluteRotation();
+	this.UpdateAbsoluteScale();
 };
 NewnorthWGL.CameraTransformComponent = function(data) {
 	NewnorthWGL.TransformComponent.call(this, data);
