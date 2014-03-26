@@ -2314,17 +2314,21 @@ Engine = {
 	},
 	// Textures
 	Textures: {},
-	LoadTexture: function(alias, uri) {
+	LoadTexture: function(alias, uri, options) {
 		var image = new Image();
+		image.Options = typeof(options) === "undefined" ? [] : options;
 		image.Texture = Engine.GL.createTexture();
 		image.onload = function() {
 			Engine.GL.bindTexture(Engine.GL.TEXTURE_2D, this.Texture);
 			Engine.GL.pixelStorei(Engine.GL.UNPACK_FLIP_Y_WEBGL, true);
-			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_WRAP_S, Engine.GL.CLAMP_TO_EDGE);
-			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_WRAP_T, Engine.GL.CLAMP_TO_EDGE);
-			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_MAG_FILTER, Engine.GL.NEAREST);
-			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_MIN_FILTER, Engine.GL.NEAREST);
 			Engine.GL.texImage2D(Engine.GL.TEXTURE_2D, 0, Engine.GL.RGBA, Engine.GL.RGBA, Engine.GL.UNSIGNED_BYTE, this);
+			Engine.GL.generateMipmap(Engine.GL.TEXTURE_2D);
+			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_WRAP_S, typeof(this.Options.WrapS) === "undefined" ? Engine.GL.CLAMP_TO_EDGE : this.Options.WrapS);
+			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_WRAP_T, typeof(this.Options.WrapT) === "undefined" ? Engine.GL.CLAMP_TO_EDGE : this.Options.WrapT);
+			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_MIN_FILTER, typeof(this.Options.MinFilter) === "undefined" ? Engine.GL.LINEAR_MIPMAP_LINEAR : this.Options.MinFilter);
+			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_MAG_FILTER, typeof(this.Options.MagFilter) === "undefined" ? Engine.GL.LINEAR : this.Options.MagFilter);
+			var ext = Engine.GL.getExtension("EXT_texture_filter_anisotropic");
+			Engine.GL.texParameterf(Engine.GL.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, 4);
 			Engine.GL.bindTexture(Engine.GL.TEXTURE_2D, null);
 		}
 
