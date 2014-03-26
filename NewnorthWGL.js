@@ -905,20 +905,30 @@ NewnorthWGL.Mesh.prototype.Draw = function(program, method) {
 NewnorthWGL.Mesh.CreatePlane3f = function(options) {
 	var mesh = new NewnorthWGL.Mesh();
 	var position = options.position === undefined ? [0, 0, 0] : options.position;
-	var size = options.size === undefined ? [1, 1] : options.size;
+	var size = options.size === undefined ? [1, 1, 0] : options.size;
+	var up = typeof(options.up) === "undefined" ? 1 : options.up;
+	var down = typeof(options.down) === "undefined" ? -1 : options.down;
+	var left = typeof(options.left) === "undefined" ? -1 : options.left;
+	var right = typeof(options.right) === "undefined" ? 1 : options.right;
+	var forwards = typeof(options.forwards) === "undefined" ? 1 : options.forwards;
+	var backwards = typeof(options.backwards) === "undefined" ? -1 : options.backwards;
+	var textureLeft = typeof(options.textureLeft) === "undefined" ? 0 : options.textureLeft;
+	var textureRight = typeof(options.textureRight) === "undefined" ? 1 : options.textureRight;
+	var textureTop = typeof(options.textureTop) === "undefined" ? 1 : options.textureTop;
+	var textureBottom = typeof(options.textureBottom) === "undefined" ? 0 : options.textureBottom;
 	var applyTexCoords = Newnorth.Either(options.applyTexCoords, false);
 
 	vertices = [
-		[- 0.5 * size[0], + 0.5 * size[0]],
-		[+ 0.5 * size[1], - 0.5 * size[1]],
-		0,
+		0.5 * size[0],
+		0.5 * size[1],
+		0.5 * size[2],
 	];
 
 	vertices = {
-		topLeft: [vertices[0][0], vertices[1][0], vertices[2]],
-		topRight: [vertices[0][1], vertices[1][0], vertices[2]],
-		bottomLeft: [vertices[0][0], vertices[1][1], vertices[2]],
-		bottomRight: [vertices[0][1], vertices[1][1], vertices[2]],
+		topLeft: [vertices[0] * left, vertices[1] * up, vertices[2] * backwards],
+		topRight: [vertices[0] * right, vertices[1] * up, vertices[2] * backwards],
+		bottomLeft: [vertices[0] * left, vertices[1] * down, vertices[2] * forwards],
+		bottomRight: [vertices[0] * right, vertices[1] * down, vertices[2] * forwards],
 	};
 
 	NewnorthWGL.Vec3.Add(vertices.topLeft, vertices.topLeft, position);
@@ -939,7 +949,14 @@ NewnorthWGL.Mesh.CreatePlane3f = function(options) {
 	if(applyTexCoords) {
 		mesh.CreateBuffer(
 			"aTexCoord", "2f", Engine.GL.STATIC_DRAW,
-			[0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
+			[
+				textureLeft, textureTop,
+				textureRight, textureTop,
+				textureLeft, textureBottom,
+				textureRight, textureBottom,
+				textureLeft, textureBottom,
+				textureRight, textureTop
+			]
 		);
 	}
 
