@@ -1232,6 +1232,7 @@ NewnorthWGL.CameraEntity = function(scene, data) {
 	this.CullMask = 0;
 	this.Mode = "";
 	this.IsEnabled = true;
+	this.PostProcessing = null;
 
 	NewnorthWGL.Entity.call(this, data);
 
@@ -1242,11 +1243,22 @@ NewnorthWGL.CameraEntity = function(scene, data) {
 NewnorthWGL.CameraEntity.prototype = Object.create(NewnorthWGL.Entity.prototype);
 NewnorthWGL.CameraEntity.prototype.SetViewport = function(viewport) {
 	this.Viewport = viewport;
+
+	if(this.PostProcessing !== null) {
+		this.PostProcessing.SetSize([this.Viewport[2], this.Viewport[3]]);
+	}
+};
+NewnorthWGL.CameraEntity.prototype.AddPostProcess = function(program) {
+	if(this.PostProcessing === null) {
+		this.PostProcessing = new NewnorthWGL.PostProcessing([this.Viewport[2], this.Viewport[3]]);
+	}
+
+	this.PostProcessing.AddProcess(new NewnorthWGL.PostProcess(program, [this.Viewport[2], this.Viewport[3]]));
 };
 NewnorthWGL.CameraEntity.prototype.Render = function(mode, framebuffer, options) {
 	mode = Newnorth.Either(mode, this.Mode);
 
-	if(options === undefined) {
+	if(typeof(options) === "undefined") {
 		var viewport = this.Viewport;
 		var clearColor = this.ClearColor;
 	}
@@ -1255,12 +1267,19 @@ NewnorthWGL.CameraEntity.prototype.Render = function(mode, framebuffer, options)
 		var clearColor = Newnorth.Either(options.ClearColor, this.ClearColor);
 	}
 
-	if(framebuffer !== undefined) {
+	if(typeof(framebuffer) !== "undefined") {
 		var x = viewport[0];
 		var y = framebuffer.Height - viewport[1] - viewport[3];
 		var w = viewport[2];
 		var h = viewport[3];
 		framebuffer.Bind();
+	}
+	else if(this.PostProcessing !== null) {
+		var x = 0;
+		var y = 0;
+		var w = this.PostProcessing.Size[0];
+		var h = this.PostProcessing.Size[1];
+		this.PostProcessing.Bind();
 	}
 	else {
 		var x = viewport[0];
@@ -1274,20 +1293,17 @@ NewnorthWGL.CameraEntity.prototype.Render = function(mode, framebuffer, options)
 	Engine.GL.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
 	Engine.GL.clear(Engine.GL.COLOR_BUFFER_BIT | Engine.GL.DEPTH_BUFFER_BIT);
 
-	// Render non-transparent entities.
 	Engine.GL.depthFunc(Engine.GL.LESS);
 	for(var i = 0; i < this.Scene.EntityManagers.length; ++i) {
 		this.Scene.EntityManagers[i].Render(false, this, mode);
 	}
 
-	// Render transparent entities.
-	Engine.GL.depthFunc(Engine.GL.LEQUAL);
-	for(var i = this.Scene.EntityManagers.length - 1; 0 <= i; --i) {
-		this.Scene.EntityManagers[i].Render(true, this, mode);
-	}
-
-	if(framebuffer !== undefined) {
+	if(typeof(framebuffer) !== "undefined") {
 		framebuffer.Unbind();
+	}
+	else if(this.PostProcessing !== null) {
+		this.PostProcessing.Unbind();
+		this.PostProcessing.Execute();
 	}
 };
 NewnorthWGL.OrthographicCameraEntity = function(scene, data) {
@@ -1897,6 +1913,95 @@ NewnorthWGL.CameraTransformComponent.prototype.CreateMatrix = function() {
 		this.UpdateMatrix = false;
 	}
 };
+NewnorthWGL.PostProcessing = function(size) {
+	this.Size = size;
+	this.Framebuffer = new NewnorthWGL.Framebuffer({Size: size});
+	this.Processes = [];
+};
+NewnorthWGL.PostProcessing.prototype.SetSize = function(size) {
+	this.Size = size;
+	this.Framebuffer = new NewnorthWGL.Framebuffer({Size: size});
+
+	for(var i = 0; i < this.Processes.length; ++i) {
+		this.Processes[i].SetSize(size);
+	}
+};
+NewnorthWGL.PostProcessing.prototype.AddProcess = function(process) {
+	this.Processes.push(process);
+};
+NewnorthWGL.PostProcessing.prototype.Bind = function() {
+	this.Framebuffer.Bind();
+};
+NewnorthWGL.PostProcessing.prototype.Unbind = function() {
+	this.Framebuffer.Unbind();
+};
+NewnorthWGL.PostProcessing.prototype.Execute = function(viewport) {
+	var last = this.Processes.length - 1;
+	var framebuffer = this.Framebuffer;
+
+	for(var i = 0; i < last; ++i) {
+		var buffer = i % 2;
+
+		this.Processes[i].Framebuffer.Bind();
+		this.Processes[i].Execute(framebuffer.Texture, this.Framebuffer.Texture);
+		this.Processes[i].Framebuffer.Unbind();
+
+		framebuffer = this.Processes[i].Framebuffer;
+	}
+
+	this.Processes[last].Execute(framebuffer.Texture, this.Framebuffer.Texture, viewport);
+};
+NewnorthWGL.PostProcess = function(program, size) {
+	this.Program = program;
+	this.Size = size;
+	this.Framebuffer = new NewnorthWGL.Framebuffer({Size: size});
+};
+NewnorthWGL.PostProcess.prototype.SetSize = function(size) {
+	this.Size = size;
+	this.Framebuffer = new NewnorthWGL.Framebuffer({Size: size});
+};
+NewnorthWGL.PostProcess.prototype.Execute = function(currentTexture, originalTexture, viewport) {
+	Engine.GL.clearColor(0, 0, 0, 1);
+	Engine.GL.clear(Engine.GL.COLOR_BUFFER_BIT | Engine.GL.DEPTH_BUFFER_BIT);
+
+	this.Program.Activate();
+
+	if(typeof(this.Program.uWidth) !== "undefined") {
+		this.Program.Uniform1f("uWidth", this.Size[0]);
+	}
+
+	if(typeof(this.Program.uHeight) !== "undefined") {
+		this.Program.Uniform1f("uHeight", this.Size[1]);
+	}
+
+	if(typeof(this.Program.uTexture0) !== "undefined") {
+		this.Program.UniformTexture("uTexture0", 0, currentTexture);
+	}
+
+	if(typeof(this.Program.uTexture1) !== "undefined") {
+		this.Program.UniformTexture("uTexture1", 1, originalTexture);
+	}
+
+	if(typeof(viewport) === "undefined") {
+		var x = 0;
+		var y = 0;
+		var w = Engine.Canvas.width;
+		var h = Engine.Canvas.height;
+	}
+	else {
+		var x = viewport[0];
+		var y = Engine.Canvas.height - viewport[1] - viewport[3];
+		var w = viewport[2];
+		var h = viewport[3];
+	}
+
+	Engine.GL.viewport(x, y, w, h);
+	Engine.GL.scissor(x, y, w, h);
+
+	NewnorthWGL.PostProcessing.Mesh.Draw(this.Program, Engine.GL.TRIANGLE_STRIP);
+
+	this.Program.Deactivate();
+};
 Engine = {
 	// Canvas
 	Canvas: null,
@@ -2028,6 +2133,9 @@ Engine = {
 		Engine.Mouse.Initialize();
 
 		NewnorthWGL.Control.VertexBuffer = new NewnorthWGL.Buffer2f(Engine.GL.STATIC_DRAW, [0, 0, 1, 0, 0, 1, 1, 1]);
+		NewnorthWGL.PostProcessing.Mesh = new NewnorthWGL.Mesh();
+		NewnorthWGL.PostProcessing.Mesh.CreateVertexBuffer("2f", Engine.GL.STATIC_DRAW, [-1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0]);
+		NewnorthWGL.PostProcessing.Mesh.CreateBuffer("aTexCoord", "2f", Engine.GL.STATIC_DRAW, [0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]);
 	},
 	Frame: function() {
 		var time = new Date().getTime() / 1000;
@@ -2219,7 +2327,7 @@ Engine = {
 			program[name] = value;
 		}
 
-		Engine.Programs[alias] = program;
+		return Engine.Programs[alias] = program;
 	},
 	LoadProgram: function(alias, uri) {
 		try {
@@ -2244,7 +2352,7 @@ Engine = {
 		}
 
 		try {
-			Engine.CreateProgram(alias, vs, fs, data.Variables);
+			return Engine.CreateProgram(alias, vs, fs, data.Variables);
 		}
 		catch(exception) {
 			throw "Unable to create program (" + uri + ").\n" + exception;
