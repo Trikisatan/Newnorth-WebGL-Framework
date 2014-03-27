@@ -2451,8 +2451,12 @@ Engine = {
 			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_WRAP_T, typeof(this.Options.WrapT) === "undefined" ? Engine.GL.CLAMP_TO_EDGE : this.Options.WrapT);
 			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_MIN_FILTER, typeof(this.Options.MinFilter) === "undefined" ? Engine.GL.LINEAR_MIPMAP_LINEAR : this.Options.MinFilter);
 			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_MAG_FILTER, typeof(this.Options.MagFilter) === "undefined" ? Engine.GL.LINEAR : this.Options.MagFilter);
-			var ext = Engine.GL.getExtension("EXT_texture_filter_anisotropic");
-			Engine.GL.texParameterf(Engine.GL.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, 4);
+
+			if(this.Options.UseAnistropic === true) {
+				var ext = Engine.GL.getExtension("EXT_texture_filter_anisotropic");
+				Engine.GL.texParameterf(Engine.GL.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, 4);
+			}
+
 			Engine.GL.bindTexture(Engine.GL.TEXTURE_2D, null);
 		}
 
