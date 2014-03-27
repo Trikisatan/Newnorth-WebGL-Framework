@@ -399,6 +399,22 @@ NewnorthWGL.Vec3 = {
 	Clone: function(v) {
 		return [v[0], v[1], v[2]];
 	},
+	Cross: function(out, v1, v2) {
+		if(out === null) {
+			return [
+				v1[1] * v2[2] - v1[2] * v2[1],
+				v1[2] * v2[0] - v1[0] * v2[2],
+				v1[0] * v2[1] - v1[1] * v2[0]
+			];
+		}
+
+		var v1x = v1[0], v1y = v1[1], v1z = v1[2];
+		var v2x = v2[0], v2y = v2[1], v2z = v2[2];
+		out[0] = v1y * v2z - v1z * v2y;
+		out[1] = v1z * v2x - v1x * v2z;
+		out[2] = v1x * v2y - v1y * v2x;
+		return out;
+	},
 	Distance: function(v1, v2) {
 		return NewnorthWGL.Vec3.Length([v2[0] - v1[0], v2[1] - v1[1], v2[2] - v1[2]]);
 	},
