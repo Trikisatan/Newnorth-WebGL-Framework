@@ -919,6 +919,8 @@ NewnorthWGL.Mesh.prototype.Draw = function(program, method) {
 	this.VertexBuffer.Deactivate(program.aPosition);
 };
 NewnorthWGL.Mesh.CreatePlane3f = function(options) {
+	options = typeof(options) === "undefined" ? {} : options;
+
 	var mesh = new NewnorthWGL.Mesh();
 	var position = options.position === undefined ? [0, 0, 0] : options.position;
 	var size = options.size === undefined ? [1, 1, 0] : options.size;
@@ -2440,13 +2442,17 @@ Engine = {
 	Textures: {},
 	LoadTexture: function(alias, uri, options) {
 		var image = new Image();
-		image.Options = typeof(options) === "undefined" ? [] : options;
+		image.Options = typeof(options) === "undefined" ? {} : options;
 		image.Texture = Engine.GL.createTexture();
 		image.onload = function() {
 			Engine.GL.bindTexture(Engine.GL.TEXTURE_2D, this.Texture);
-			Engine.GL.pixelStorei(Engine.GL.UNPACK_FLIP_Y_WEBGL, true);
+			Engine.GL.pixelStorei(Engine.GL.UNPACK_FLIP_Y_WEBGL, typeof(this.Options.FlipY) === "undefined" ? false : this.Options.FlipY);
 			Engine.GL.texImage2D(Engine.GL.TEXTURE_2D, 0, Engine.GL.RGBA, Engine.GL.RGBA, Engine.GL.UNSIGNED_BYTE, this);
-			Engine.GL.generateMipmap(Engine.GL.TEXTURE_2D);
+
+			if(this.Options.GenerateMipmap === true) {
+				Engine.GL.generateMipmap(Engine.GL.TEXTURE_2D);
+			}
+
 			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_WRAP_S, typeof(this.Options.WrapS) === "undefined" ? Engine.GL.CLAMP_TO_EDGE : this.Options.WrapS);
 			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_WRAP_T, typeof(this.Options.WrapT) === "undefined" ? Engine.GL.CLAMP_TO_EDGE : this.Options.WrapT);
 			Engine.GL.texParameteri(Engine.GL.TEXTURE_2D, Engine.GL.TEXTURE_MIN_FILTER, typeof(this.Options.MinFilter) === "undefined" ? Engine.GL.LINEAR_MIPMAP_LINEAR : this.Options.MinFilter);
