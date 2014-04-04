@@ -928,8 +928,8 @@ NewnorthWGL.Mesh.CreatePlane3f = function(options) {
 	var down = typeof(options.down) === "undefined" ? -1 : options.down;
 	var left = typeof(options.left) === "undefined" ? -1 : options.left;
 	var right = typeof(options.right) === "undefined" ? 1 : options.right;
-	var forwards = typeof(options.forwards) === "undefined" ? 1 : options.forwards;
-	var backwards = typeof(options.backwards) === "undefined" ? -1 : options.backwards;
+	var forward = typeof(options.forward) === "undefined" ? 1 : options.forward;
+	var backward = typeof(options.backward) === "undefined" ? -1 : options.backward;
 	var textureLeft = typeof(options.textureLeft) === "undefined" ? 0 : options.textureLeft;
 	var textureRight = typeof(options.textureRight) === "undefined" ? 1 : options.textureRight;
 	var textureTop = typeof(options.textureTop) === "undefined" ? 1 : options.textureTop;
@@ -943,10 +943,10 @@ NewnorthWGL.Mesh.CreatePlane3f = function(options) {
 	];
 
 	vertices = {
-		topLeft: [vertices[0] * left, vertices[1] * up, vertices[2] * backwards],
-		topRight: [vertices[0] * right, vertices[1] * up, vertices[2] * backwards],
-		bottomLeft: [vertices[0] * left, vertices[1] * down, vertices[2] * forwards],
-		bottomRight: [vertices[0] * right, vertices[1] * down, vertices[2] * forwards],
+		topLeft: [vertices[0] * left, vertices[1] * up, vertices[2] * backward],
+		topRight: [vertices[0] * right, vertices[1] * up, vertices[2] * backward],
+		bottomLeft: [vertices[0] * left, vertices[1] * down, vertices[2] * forward],
+		bottomRight: [vertices[0] * right, vertices[1] * down, vertices[2] * forward],
 	};
 
 	NewnorthWGL.Vec3.Add(vertices.topLeft, vertices.topLeft, position);
@@ -1686,7 +1686,7 @@ NewnorthWGL.TransformComponent.prototype.AdjustPositionZ = function(distance) {
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.UpdateAbsolutePosition = function() {
-	if(this.Entity.Parent === null) {
+	if(this.Entity.Parent === null || typeof(this.Entity.Parent) === "undefined") {
 		this.AbsolutePosition[0] = this.Position[0];
 		this.AbsolutePosition[1] = this.Position[1];
 		this.AbsolutePosition[2] = this.Position[2];
@@ -1697,9 +1697,11 @@ NewnorthWGL.TransformComponent.prototype.UpdateAbsolutePosition = function() {
 		this.AbsolutePosition[2] = this.Entity.Parent.Transform.AbsolutePosition[2] + this.Position[2];
 	}
 
-	for(var i = 0; i < this.Entity.Children.length; ++i) {
-		if(this.Entity.Children[i].Transform !== undefined) {
-			this.Entity.Children[i].Transform.UpdateAbsolutePosition();
+	if(typeof(this.Entity.Children) !== "undefined") {
+		for(var i = 0; i < this.Entity.Children.length; ++i) {
+			if(this.Entity.Children[i].Transform !== undefined) {
+				this.Entity.Children[i].Transform.UpdateAbsolutePosition();
+			}
 		}
 	}
 
@@ -1784,7 +1786,7 @@ NewnorthWGL.TransformComponent.prototype.AdjustRotationZ = function(rotation) {
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.UpdateAbsoluteRotation = function() {
-	if(this.Entity.Parent === null) {
+	if(this.Entity.Parent === null || typeof(this.Entity.Parent) === "undefined") {
 		this.AbsoluteRotation[0] = this.Rotation[0];
 		this.AbsoluteRotation[1] = this.Rotation[1];
 		this.AbsoluteRotation[2] = this.Rotation[2];
@@ -1795,9 +1797,11 @@ NewnorthWGL.TransformComponent.prototype.UpdateAbsoluteRotation = function() {
 		this.AbsoluteRotation[2] = this.Entity.Parent.Transform.AbsoluteRotation[2] + this.Rotation[2];
 	}
 
-	for(var i = 0; i < this.Entity.Children.length; ++i) {
-		if(this.Entity.Children[i].Transform !== undefined) {
-			this.Entity.Children[i].Transform.UpdateAbsoluteRotation();
+	if(typeof(this.Entity.Children) !== "undefined") {
+		for(var i = 0; i < this.Entity.Children.length; ++i) {
+			if(this.Entity.Children[i].Transform !== undefined) {
+				this.Entity.Children[i].Transform.UpdateAbsoluteRotation();
+			}
 		}
 	}
 
@@ -1882,7 +1886,7 @@ NewnorthWGL.TransformComponent.prototype.AdjustScaleZ = function(scale) {
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.UpdateAbsoluteScale = function() {
-	if(this.Entity.Parent === null) {
+	if(this.Entity.Parent === null || typeof(this.Entity.Parent) === "undefined") {
 		this.AbsoluteScale[0] = this.Scale[0];
 		this.AbsoluteScale[1] = this.Scale[1];
 		this.AbsoluteScale[2] = this.Scale[2];
@@ -1893,9 +1897,11 @@ NewnorthWGL.TransformComponent.prototype.UpdateAbsoluteScale = function() {
 		this.AbsoluteScale[2] = this.Entity.Parent.Transform.AbsoluteScale[2] * this.Scale[2];
 	}
 
-	for(var i = 0; i < this.Entity.Children.length; ++i) {
-		if(this.Entity.Children[i].Transform !== undefined) {
-			this.Entity.Children[i].Transform.UpdateAbsoluteScale();
+	if(typeof(this.Entity.Children) !== "undefined") {
+		for(var i = 0; i < this.Entity.Children.length; ++i) {
+			if(this.Entity.Children[i].Transform !== undefined) {
+				this.Entity.Children[i].Transform.UpdateAbsoluteScale();
+			}
 		}
 	}
 
@@ -2304,6 +2310,31 @@ Engine = {
 	},
 	GetMouseWheel: function() {
 		return Engine.Mouse.State[1].Wheel;
+	},
+	// Meshes
+	Meshes: {},
+	LoadMesh: function(alias, uri) {
+		var data = Newnorth.AJAX.GetJSON(uri);
+
+		var mesh = new NewnorthWGL.Mesh();
+		mesh.CreateVertexBuffer(
+			data.VertexBuffer.Type,
+			data.VertexBuffer.Usage,
+			data.VertexBuffer.Data
+		);
+		for(var i = 0; i < mesh.Buffers.length; ++i) {
+			mesh.CreateBuffer(
+				data.Buffers[i].Attribute,
+				data.Buffers[i].Type,
+				data.Buffers[i].Usage,
+				data.Buffers[i].Data
+			);
+		}
+
+		Engine.Meshes[alias] = mesh;
+	},
+	Mesh: function(alias) {
+		return Engine.Meshes[alias];
 	},
 	// Programs
 	Programs: {},
