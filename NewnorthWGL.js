@@ -934,7 +934,7 @@ NewnorthWGL.Mesh.CreatePlane3f = function(options) {
 	var textureRight = typeof(options.textureRight) === "undefined" ? 1 : options.textureRight;
 	var textureTop = typeof(options.textureTop) === "undefined" ? 1 : options.textureTop;
 	var textureBottom = typeof(options.textureBottom) === "undefined" ? 0 : options.textureBottom;
-	var applyTexCoords = Newnorth.Either(options.applyTexCoords, false);
+	var applyTexCoords = typeof(options.applyTexCoords) === "undefined" ? false : options.applyTexCoords;
 
 	vertices = [
 		0.5 * size[0],
@@ -1183,9 +1183,9 @@ NewnorthWGL.Scene.prototype.PostRender = function() {
 	
 };
 NewnorthWGL.Entity = function(data) {
-	this.Layer = Newnorth.Either(this.Layer, 0);
+	this.Layer = typeof(this.Layer) === "undefined" ? 0 : this.Layer;
 	this.Manager = null;
-	this.Components = Newnorth.Either(this.Components, []);
+	this.Components = typeof(this.Components) === "undefined" ? [] : this.Components;
 	this.Parent = null;
 	this.Children = [];
 	this.IsTransparent = false;
@@ -1217,7 +1217,7 @@ NewnorthWGL.Entity.prototype.SetManager = function(manager) {
 };
 NewnorthWGL.Entity.prototype.AddComponent = function(type, data) {
 	var component = new type(this, data);
-	this.Components = Newnorth.Either(this.Components, []);
+	this.Components = typeof(this.Components) === "undefined" ? [] : this.Components;
 	this.Components.push(component);
 	this[component.Type] = component;
 };
@@ -1274,15 +1274,15 @@ NewnorthWGL.CameraEntity.prototype.AddPostProcess = function(program) {
 	this.PostProcessing.AddProcess(new NewnorthWGL.PostProcess(program, [this.Viewport[2], this.Viewport[3]]));
 };
 NewnorthWGL.CameraEntity.prototype.Render = function(mode, framebuffer, options) {
-	mode = Newnorth.Either(mode, this.Mode);
+	mode = (typeof(mode) === "undefined" ? this.Mode : mode);
 
 	if(typeof(options) === "undefined") {
 		var viewport = this.Viewport;
 		var clearColor = this.ClearColor;
 	}
 	else {
-		var viewport = Newnorth.Either(options.Viewport, this.Viewport);
-		var clearColor = Newnorth.Either(options.ClearColor, this.ClearColor);
+		var viewport = (typeof(options.Viewport) === "undefined" ? this.Viewport : options.Viewport);
+		var clearColor = (typeof(options.ClearColor) === "undefined" ? this.ClearColor : options.ClearColor);
 	}
 
 	if(typeof(framebuffer) !== "undefined") {
@@ -1538,7 +1538,7 @@ NewnorthWGL.PhysicsComponent.prototype.AdjustVelocityZ = function(velocity) {
 	this.Velocity[2] += velocity;
 };
 NewnorthWGL.PhysicsComponent.prototype.Update = function(time) {
-	time = Newnorth.Either(time, Engine.TimeElapsed);
+	time = typeof(time) === "undefined" ? Engine.TimeElapsed : time;
 
 	this.Entity.Transform.Translate([
 		this.Velocity[0] * time,
@@ -1644,22 +1644,22 @@ NewnorthWGL.TransformComponent.prototype.SetPositionZ = function(position) {
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToPosition = function(position, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	NewnorthWGL.Vec3.Transition(position, this.Position, position, velocity);
 	this.SetPosition(position);
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToPositionX = function(position, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	position = NewnorthWGL.Float.Transition(this.Position, position, velocity);
 	this.SetPositionX(position);
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToPositionY = function(position, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	position = NewnorthWGL.Float.Transition(this.Position, position, velocity);
 	this.SetPositionY(position);
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToPositionZ = function(position, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	position = NewnorthWGL.Float.Transition(this.Position, position, velocity);
 	this.SetPositionZ(position);
 };
@@ -1744,22 +1744,22 @@ NewnorthWGL.TransformComponent.prototype.SetRotationZ = function(rotation) {
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToRotation = function(rotation, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	NewnorthWGL.Vec3.Transition(rotation, this.Rotation, rotation, velocity);
 	this.SetRotation(rotation);
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToRotationX = function(rotation, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	rotation = NewnorthWGL.Float.Transition(this.Rotation, rotation, velocity);
 	this.SetRotationX(rotation);
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToRotationY = function(rotation, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	rotation = NewnorthWGL.Float.Transition(this.Rotation, rotation, velocity);
 	this.SetRotationY(rotation);
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToRotationZ = function(rotation, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	rotation = NewnorthWGL.Float.Transition(this.Rotation, rotation, velocity);
 	this.SetRotationZ(rotation);
 };
@@ -1844,22 +1844,22 @@ NewnorthWGL.TransformComponent.prototype.SetScaleZ = function(scale) {
 	this.UpdateMatrix = true;
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToScale = function(scale, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	NewnorthWGL.Vec3.Transition(scale, this.Scale, scale, velocity);
 	this.SetScale(scale);
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToScaleX = function(scale, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	scale = NewnorthWGL.Float.Transition(this.Scale, scale, velocity);
 	this.SetScaleX(scale);
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToScaleY = function(scale, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	scale = NewnorthWGL.Float.Transition(this.Scale, scale, velocity);
 	this.SetScaleY(scale);
 };
 NewnorthWGL.TransformComponent.prototype.TransitionToScaleZ = function(scale, velocity, time) {
-	velocity = velocity * Newnorth.Either(time, Engine.TimeElapsed);
+	velocity = velocity * (typeof(time) === "undefined" ? Engine.TimeElapsed : time);
 	scale = NewnorthWGL.Float.Transition(this.Scale, scale, velocity);
 	this.SetScaleZ(scale);
 };
@@ -1925,7 +1925,7 @@ NewnorthWGL.CameraTransformComponent.prototype.CreateMatrix = function() {
 			NewnorthWGL.Mat4.Mul(
 				null,
 				NewnorthWGL.Mat4.FromRotation(null, this.Rotation),
-				NewnorthWGL.Mat4.FromPosition(null, this.Position)
+				NewnorthWGL.Mat4.FromPosition(null, [-this.Position[0], -this.Position[1], -this.Position[2]])
 			),
 			NewnorthWGL.Mat4.Mul(
 				null,
