@@ -2516,9 +2516,13 @@ Engine.Keyboard = {
 		document.body.addEventListener("keyup", function(e){Engine.Keyboard.OnKeyUp(e)});
 	},
 	OnKeyDown: function(event) {
+		event.preventDefault();
+		event.stopPropagation();
 		this.State[0][event.keyCode] = true;
 	},
 	OnKeyUp: function(event) {
+		event.preventDefault();
+		event.stopPropagation();
 		this.State[0][event.keyCode] = false;
 	},
 	Update: function() {
@@ -2540,19 +2544,29 @@ Engine.Mouse = {
 		document.body.addEventListener("DOMMouseScroll", function(e){if(e.detail < 0){Engine.Mouse.OnMouseWheelUp(e)}else{Engine.Mouse.OnMouseWheelDown(e)}});
 	},
 	OnMouseMove: function(event) {
+		event.preventDefault();
+		event.stopPropagation();
 		this.State[0].Position[0] = window.pageXOffset + event.clientX - Engine.GetCanvasPositionX();
 		this.State[0].Position[1] = window.pageYOffset + event.clientY - Engine.GetCanvasPositionY();
 	},
 	OnMouseDown: function(event) {
+		event.preventDefault();
+		event.stopPropagation();
 		this.State[0].Buttons[event.button] = true;
 	},
 	OnMouseUp: function(event) {
+		event.preventDefault();
+		event.stopPropagation();
 		this.State[0].Buttons[event.button] = false;
 	},
-	OnMouseWheelUp: function() {
+	OnMouseWheelUp: function(event) {
+		event.preventDefault();
+		event.stopPropagation();
 		this.State[0].Wheel = 1;
 	},
-	OnMouseWheelDown: function() {
+	OnMouseWheelDown: function(event) {
+		event.preventDefault();
+		event.stopPropagation();
 		this.State[0].Wheel = -1;
 	},
 	Update: function() {
