@@ -2598,8 +2598,8 @@ Engine.Keyboard = {
 		[],
 	],
 	Initialize: function() {
-		Engine.Canvas.addEventListener("keydown", function(e){Engine.Keyboard.OnKeyDown(e)});
-		Engine.Canvas.addEventListener("keyup", function(e){Engine.Keyboard.OnKeyUp(e)});
+		document.body.addEventListener("keydown", function(e){Engine.Keyboard.OnKeyDown(e)});
+		document.body.addEventListener("keyup", function(e){Engine.Keyboard.OnKeyUp(e)});
 	},
 	OnKeyDown: function(event) {
 		event.preventDefault();
