@@ -896,6 +896,50 @@ NewnorthWGL.Framebuffer.prototype.ReadPixels = function(x, y, w, h, type, size) 
 
 	return pixels;
 };
+NewnorthWGL.ImageRGB = function(width, height) {
+	if(0 < width && 0 < height) {
+		this.Data = new Uint8Array(width * height * 3);
+		this.Width = width;
+		this.Height = height;
+	}
+	else {
+		this.Data = null;
+		this.Width = 0;
+		this.Height = 0;
+	}
+};
+NewnorthWGL.ImageRGB.prototype.Clear = function(color) {
+	for(var i = 0, j = this.Width * this.Height; i < j; ++i) {
+		var k = i * 3;
+		this.Data[k] = color[0];
+		this.Data[k + 1] = color[1];
+		this.Data[k + 2] = color[2];
+	}
+};
+NewnorthWGL.ImageRGB.prototype.DrawRect = function(color, x, y, width, height) {
+	for(var j = 0; j < height; ++j) {
+		var k = (y + j) * this.Width * 3;
+		for(var i = 0; i < width; ++i) {
+			var l = k + (x + i) * 3;
+			this.Data[l] = color[0];
+			this.Data[l + 1] = color[1];
+			this.Data[l + 2] = color[2];
+		}
+	}
+};
+NewnorthWGL.ImageRGB.prototype.DrawImage = function(source, sx, sy, dx, dy, width, height) {
+	for(var j = 0; j < height; ++j) {
+		var dk = (dy + j) * this.Width * 3;
+		var sk = (sy + j) * source.Width * 3;
+		for(var i = 0; i < width; ++i) {
+			var dl = dk + (dx + i) * 3;
+			var sl = sk + (sx + i) * 3;
+			this.Data[dl] = source.Data[sl];
+			this.Data[dl + 1] = source.Data[sl + 1];
+			this.Data[dl + 2] = source.Data[sl + 2];
+		}
+	}
+};
 NewnorthWGL.ImageRGBA = function(width, height) {
 	if(0 < width && 0 < height) {
 		this.Data = new Uint8Array(width * height * 4);
@@ -2562,9 +2606,10 @@ Engine = {
 	},
 	// Images
 	Images: {},
-	LoadImage: function(alias, uri) {
+	LoadImageRGB: function(alias, uri) {
 		var image = new Image();
-		image.Image = new NewnorthWGL.ImageRGBA(0, 0);
+		image.Image = new NewnorthWGL.ImageRGB(0, 0);
+		image.Image.IsLoaded = false;
 		image.onload = function() {
 			this.Image.Width = this.naturalWidth;
 			this.Image.Height = this.naturalHeight;
@@ -2577,15 +2622,49 @@ Engine = {
 			context.drawImage(this, 0, 0);
 
 			var data = context.getImageData(0, 0, this.Image.Width, this.Image.Height).data;
+
+			this.Image.Data = new Uint8Array(this.Image.Width * this.Image.Height * 3);
+			for(var i = 0, j = 0; i < data.length; ++i) {
+				if(i % 4 === 3) {
+					continue;
+				}
+
+				this.Image.Data[j++] = data[i];
+			}
+
+			this.Image.IsLoaded = true;
+		};
+		image.src = uri;
+
+		return Engine.Images[alias] = image.Image;
+	},
+	LoadImageRGBA: function(alias, uri) {
+		var image = new Image();
+		image.Image = new NewnorthWGL.ImageRGBA(0, 0);
+		image.Image.IsLoaded = false;
+		image.onload = function() {
+			this.Image.Width = this.naturalWidth;
+			this.Image.Height = this.naturalHeight;
+
+			var canvas = document.createElement("canvas");
+			canvas.width = this.Image.Width;
+			canvas.height = this.Image.Height;
+
+			var context = canvas.getContext("2d");
+			context.drawImage(this, 0, 0);
+
+			var data = context.getImageData(0, 0, this.Image.Width, this.Image.Height).data;
+
 			this.Image.Data = new Uint8Array(data.length);
 			for(var i = 0; i < data.length; ++i) {
 				this.Image.Data[i] = data[i];
 			}
-			console.log("Loaded: " + this.Image.Data + ";" + this.Image.Data.length);
+
+			this.Image.IsLoaded = true;
 		};
 		image.src = uri;
 
-		Engine.Images[alias] = image.Image;
+		return Engine.Images[alias] = image.Image;
 	},
 	Image: function(alias) {
 		return Engine.Images[alias];
