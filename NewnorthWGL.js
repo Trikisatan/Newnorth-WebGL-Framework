@@ -2598,8 +2598,8 @@ Engine.Keyboard = {
 		[],
 	],
 	Initialize: function() {
-		document.body.addEventListener("keydown", function(e){Engine.Keyboard.OnKeyDown(e)});
-		document.body.addEventListener("keyup", function(e){Engine.Keyboard.OnKeyUp(e)});
+		Engine.Canvas.addEventListener("keydown", function(e){Engine.Keyboard.OnKeyDown(e)});
+		Engine.Canvas.addEventListener("keyup", function(e){Engine.Keyboard.OnKeyUp(e)});
 	},
 	OnKeyDown: function(event) {
 		event.preventDefault();
@@ -2623,11 +2623,11 @@ Engine.Mouse = {
 		{Position: [0, 0], Buttons: [], Wheel: 0},
 	],
 	Initialize: function() {
-		document.body.addEventListener("mousemove", function(e){Engine.Mouse.OnMouseMove(e)});
-		document.body.addEventListener("mousedown", function(e){Engine.Mouse.OnMouseDown(e)});
-		document.body.addEventListener("mouseup", function(e){Engine.Mouse.OnMouseUp(e)});
-		document.body.addEventListener("mousewheel", function(e){if(e.wheelDelta < 0){Engine.Mouse.OnMouseWheelUp(e)}else{Engine.Mouse.OnMouseWheelDown(e)}});
-		document.body.addEventListener("DOMMouseScroll", function(e){if(e.detail < 0){Engine.Mouse.OnMouseWheelUp(e)}else{Engine.Mouse.OnMouseWheelDown(e)}});
+		Engine.Canvas.addEventListener("mousemove", function(e){Engine.Mouse.OnMouseMove(e)});
+		Engine.Canvas.addEventListener("mousedown", function(e){Engine.Mouse.OnMouseDown(e)});
+		Engine.Canvas.addEventListener("mouseup", function(e){Engine.Mouse.OnMouseUp(e)});
+		Engine.Canvas.addEventListener("mousewheel", function(e){if(e.wheelDelta < 0){Engine.Mouse.OnMouseWheelUp(e)}else{Engine.Mouse.OnMouseWheelDown(e)}});
+		Engine.Canvas.addEventListener("DOMMouseScroll", function(e){if(e.detail < 0){Engine.Mouse.OnMouseWheelUp(e)}else{Engine.Mouse.OnMouseWheelDown(e)}});
 	},
 	OnMouseMove: function(event) {
 		event.preventDefault();
