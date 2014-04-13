@@ -399,6 +399,9 @@ NewnorthWGL.Vec3 = {
 	Clone: function(v) {
 		return [v[0], v[1], v[2]];
 	},
+	Create: function() {
+		return [0, 0, 0];
+	},
 	Cross: function(out, v1, v2) {
 		if(out === null) {
 			return [
@@ -445,6 +448,9 @@ NewnorthWGL.Vec3 = {
 		out[1] = v1[1] / v2;
 		out[2] = v1[2] / v2;
 		return out;
+	},
+	Dot: function(v1, v2) {
+		return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 	},
 	IsEqual: function(v1, v2) {
 		return v1[0] === v2[0] && v1[1] === v2[1] && v1[2] === v2[2];
@@ -515,13 +521,14 @@ NewnorthWGL.Vec3 = {
 		var s = Math.sin(r);
 
 		if(out === null) {
-			return [
+			return NewnorthWGL.Vec3.Clone([
 				v[0],
 				v[1] * c - v[2] * s,
 				v[1] * s + v[2] * c
-			];
+			]);
 		}
 
+		v = NewnorthWGL.Vec3.Clone(v);
 		out[0] = v[0];
 		out[1] = v[1] * c - v[2] * s;
 		out[2] = v[1] * s + v[2] * c;
@@ -532,13 +539,14 @@ NewnorthWGL.Vec3 = {
 		var s = Math.sin(r);
 
 		if(out === null) {
-			return [
+			return NewnorthWGL.Vec3.Clone([
 				v[0] * c - v[2] * s,
 				v[1],
 				v[0] * s + v[2] * c
-			];
+			]);
 		}
 
+		v = NewnorthWGL.Vec3.Clone(v);
 		out[0] = v[0] * c - v[2] * s;
 		out[1] = v[1];
 		out[2] = v[0] * s + v[2] * c;
@@ -549,13 +557,14 @@ NewnorthWGL.Vec3 = {
 		var s = Math.sin(r);
 
 		if(out === null) {
-			return [
+			return NewnorthWGL.Vec3.Clone([
 				v[0] * c - v[1] * s,
 				v[0] * s + v[1] * c,
 				v[2]
-			];
+			]);
 		}
 
+		v = NewnorthWGL.Vec3.Clone(v);
 		out[0] = v[0] * c - v[1] * s;
 		out[1] = v[0] * s + v[1] * c;
 		out[2] = v[2];
