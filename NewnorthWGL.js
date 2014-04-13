@@ -896,6 +896,53 @@ NewnorthWGL.Framebuffer.prototype.ReadPixels = function(x, y, w, h, type, size) 
 
 	return pixels;
 };
+NewnorthWGL.ImageRGBA = function(width, height) {
+	if(0 < width && 0 < height) {
+		this.Data = new Uint8Array(width * height * 4);
+		this.Width = width;
+		this.Height = height;
+	}
+	else {
+		this.Data = null;
+		this.Width = 0;
+		this.Height = 0;
+	}
+};
+NewnorthWGL.ImageRGBA.prototype.Clear = function(color) {
+	for(var i = 0, j = this.Width * this.Height; i < j; ++i) {
+		var k = i * 4;
+		this.Data[k] = color[0];
+		this.Data[k + 1] = color[1];
+		this.Data[k + 2] = color[2];
+		this.Data[k + 3] = color[3];
+	}
+};
+NewnorthWGL.ImageRGBA.prototype.DrawRect = function(color, x, y, width, height) {
+	for(var j = 0; j < height; ++j) {
+		var k = (y + j) * this.Width * 4;
+		for(var i = 0; i < width; ++i) {
+			var l = k + (x + i) * 4;
+			this.Data[l] = color[0];
+			this.Data[l + 1] = color[1];
+			this.Data[l + 2] = color[2];
+			this.Data[l + 3] = color[3];
+		}
+	}
+};
+NewnorthWGL.ImageRGBA.prototype.DrawImage = function(source, sx, sy, width, height, dx, dy) {
+	for(var j = 0; j < height; ++j) {
+		var dk = (dy + j) * this.Width * 4;
+		var sk = (sy + j) * source.Width * 4;
+		for(var i = 0; i < width; ++i) {
+			var dl = dk + (dx + i) * 4;
+			var sl = sk + (sx + i) * 4;
+			this.Data[dl] = source.Data[sl];
+			this.Data[dl + 1] = source.Data[sl + 1];
+			this.Data[dl + 2] = source.Data[sl + 2];
+			this.Data[dl + 3] = source.Data[sl + 3];
+		}
+	}
+};
 NewnorthWGL.Mesh = function() {
 	this.VertexBuffer = null;
 	this.Buffers = {};
@@ -2512,6 +2559,36 @@ Engine = {
 	},
 	Texture: function(alias) {
 		return Engine.Textures[alias];
+	},
+	// Images
+	Images: {},
+	LoadImage: function(alias, uri) {
+		var image = new Image();
+		image.Image = new NewnorthWGL.ImageRGBA(0, 0);
+		image.onload = function() {
+			this.Image.Width = this.naturalWidth;
+			this.Image.Height = this.naturalHeight;
+
+			var canvas = document.createElement("canvas");
+			canvas.width = this.Image.Width;
+			canvas.height = this.Image.Height;
+
+			var context = canvas.getContext("2d");
+			context.drawImage(this, 0, 0);
+
+			var data = context.getImageData(0, 0, this.Image.Width, this.Image.Height).data;
+			this.Image.Data = new Uint8Array(data.length);
+			for(var i = 0; i < data.length; ++i) {
+				this.Image.Data[i] = data[i];
+			}
+			console.log("Loaded: " + this.Image.Data + ";" + this.Image.Data.length);
+		};
+		image.src = uri;
+
+		Engine.Images[alias] = image.Image;
+	},
+	Image: function(alias) {
+		return Engine.Images[alias];
 	},
 };
 Engine.Keyboard = {
